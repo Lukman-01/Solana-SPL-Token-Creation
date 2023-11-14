@@ -4,8 +4,33 @@ import { createMint, getOrCreateAssociatedTokenAccount, mintTo, transfer } from 
 (async () => {
     // Step 1: Connect to cluster and generate a new Keypair
     
+    const connection = new Connection(clusterApiUrl("devnet"), "confirmed");
+    // Get Keypair from Secret Key
+    var from = Keypair.generate();
 
-    // Step 2: Airdrop SOL into your from wallet
+    // Generate another Keypair (account we'll be sending to)
+    const to = Keypair.generate();
+
+    // Step 2: Airdrop 2 SOL into your from wallet
+    console.log("Airdopping some SOL to Sender wallet!");
+    const fromAirDropSignature = await connection.requestAirdrop(
+        new PublicKey(from.publicKey),
+        2 * LAMPORTS_PER_SOL
+    );
+
+    // Latest blockhash (unique identifer of the block) of the cluster
+    let latestBlockHash = await connection.getLatestBlockhash();
+
+    // Confirm transaction using the last valid block height (refers to its time)
+    // to check for transaction expiration
+    await connection.confirmTransaction({
+        blockhash: latestBlockHash.blockhash,
+        lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
+        signature: fromAirDropSignature
+    });
+
+    console.log("Airdrop completed for the Sender account");
+    
     
     // Step 3: Create new token mint and get the token account of the fromWallet address
     //If the token account does not exist, create it
